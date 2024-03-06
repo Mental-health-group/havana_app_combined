@@ -11,9 +11,10 @@ app.use(express.json());
 app.use(cors());
 app.use("/api/users", userRoute);
 app.use("/api/chats", chatRoute);
+app.use("/api/messages", messageRoute);
 
 app.get("/", (req, res) => {
-  res.send("welcome to Havana app APIs..");
+  res.send("Welcome to Havana app APIs..");
 });
 
 const port = process.env.PORT || 3000;

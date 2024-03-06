@@ -16,8 +16,8 @@ function App() {
       <Container>
         <Routes>
           <Route path="/" element={user ? <Chat /> : <Login />} />
-          <Route path="/register" element={user ? <chat /> : <Register />} />
-          <Route path="/login" element={user ? <chat /> : <Login />} />
+          <Route path="/register" element={user ? <Chat /> : <Register />} />
+          <Route path="/login" element={user ? <Chat /> : <Login />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Container>
