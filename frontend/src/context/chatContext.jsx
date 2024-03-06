@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { baseUrl, getRequest, postRequest } from "../utils/services";
 
 export const ChatContext = createContext();
@@ -22,7 +22,7 @@ export const ChatContextProvider = ({ children, user }) => {
           return setUserChatsError(response);
         }
 
-        setUserChatsError(response);
+        setUserChats(response);
       }
     };
 
