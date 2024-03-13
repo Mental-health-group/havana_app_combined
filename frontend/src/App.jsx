@@ -7,7 +7,7 @@ import { Container } from "react-bootstrap";
 import NavBar from "./components/NavBar";
 import { useContext } from "react";
 import { AuthContext } from "./context/AuthContext";
-import { ChatContext, ChatContextProvider } from "./context/ChatContext";
+import { ChatContext, ChatContextProvider } from "./context/AuthContext.jsx";
 
 function App() {
   const { user } = useContext(AuthContext);
