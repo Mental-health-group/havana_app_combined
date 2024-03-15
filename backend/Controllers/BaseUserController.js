@@ -2,112 +2,85 @@ const userModel = require("../Models/BaseUser");
 const bcrypt = require("bcrypt");
 const validator = require("validator"); // Import validator library
 const jwt = require("jsonwebtoken");
-const ProfessionalUserModel = require("../Models/prefessionalUserModel");
 
-class UserController {
-  static createToken(_id) {
-    const jwtkey = process.env.JWT_SECRET_KEY;
-    return jwt.sign({ _id }, jwtkey, { expiresIn: "3d" });
+const createToken = (_id) => {
+  const jwtkey = process.env.JWT_SECRET_KEY;
+
+  return jwt.sign({ _id }, jwtkey, { expiresIn: "3d" });
+};
+
+const registerUser = async (req, res) => {
+  try {
+    const { name, age, gender, email, profilePicture, password,anonymous} = req.body;
+
+    let user = await userModel.findOne({ email });
+
+    if (user)
+      return res.status(400).json("User with the given email already exists...");
+
+    if (!name || !age || !gender || !email || !password)
+      return res.status(400).json("All fields are required...");
+
+    if (!validator.isEmail(email)) // Validate email
+      return res.status(400).json("Email must be a valid email address...");
+
+    user = new userModel({ name, age, gender, email, profilePicture, password });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+
+    await user.save();
+
+    const token = createToken(user._id);
+
+    res.status(200).json({ _id: user._id, name, email, token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
   }
+};
 
-  static async registerUser(req, res) {
-    try {
-      const { name, age, gender, email, profilePicture, password, anonymous } = req.body;
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
 
-      let user = await userModel.findOne({ email });
+  try {
+    let user = await userModel.findOne({ email });
 
-      if (user)
-        return res.status(400).json({ error: "User with the given email already exists..." });
+    if (!user) return res.status(400).json("Invalid email or password..");
 
-      if (!name || !age || !gender || !email || !password)
-        return res.status(400).json({ error: "All fields are required..." });
+    const isValidPassword = await bcrypt.compare(password, user.password);
 
-      if (!validator.isEmail(email)) // Validate email
-        return res.status(400).json({ error: "Email must be a valid email address..." });
+    if (!isValidPassword)
+      return res.status(400).json("Invalid email or password...");
 
-      user = new userModel({ name, age, gender, email, profilePicture, password, anonymous});
+    const token = createToken(user._id);
 
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(user.password, salt);
-
-      await user.save();
-
-      const token = UserController.createToken(user._id);
-
-      res.status(200).json({ _id: user._id, name, email, token });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
+    res.status(200).json({ _id: user._id, name: user.name, email, token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
   }
+};
 
-  static async loginUser(req, res) {
-    const { email, password } = req.body;
-
-    try {
-      let user = await userModel.findOne({ email });
-
-      if (!user) return res.status(400).json({ error: "Invalid email or password.." });
-
-      const isValidPassword = await bcrypt.compare(password, user.password);
-
-      if (!isValidPassword)
-        return res.status(400).json({ error: "Invalid email or password..." });
-
-      const token = UserController.createToken(user._id);
-
-      res.status(200).json({ _id: user._id, name: user.name, email, token });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
+const findUser = async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const user = await userModel.findById(userId);
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
   }
+};
 
-  static async findUser(req, res) {
-    const {_id} = req.body;
-    try {
-      const user = await userModel.findById(_id);
-      if (!user) return res.status(404).json({ error: "User not found" });
-      res.status(200).json(user);
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
+const getUsers = async (req, res) => {
+  try {
+    const users = await userModel.find();
+    res.status(200).json(users);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
   }
+};
 
-  static async getUsers(req, res) {
-    try {
-      const users = await userModel.find();
-      res.status(200).json(users);
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  }
-  static async update(req, res) {
-    const { _id } = req.body;
-    try {
-      let user = await userModel.findById(_id);
-      if (!user) {
-        return res.status(404).json({ error: 'Basic User Not Found' });
-      }
-
-      // Update professionalUser object with truthy properties from req.body
-      Object.keys(req.body).forEach(key => {
-        if (req.body[key]) {
-          user[key] = req.body[key];
-        }
-      });
-
-      // Save the updated professionalUser object
-      user = await user.save();
-
-      res.status(200).json({ message: 'Professional user updated successfully', data: professionalUser });
-    } catch (error) {
-      console.error('Error updating professional user:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-}
-
-module.exports = UserController;
+module.exports = { loginUser, findUser, getUsers,registerUser };
