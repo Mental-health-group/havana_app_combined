@@ -2,6 +2,7 @@ const userModel = require("../Models/BaseUser");
 const bcrypt = require("bcrypt");
 const validator = require("validator"); // Import validator library
 const jwt = require("jsonwebtoken");
+const ProfessionalUserModel = require("../Models/prefessionalUserModel");
 
 const createToken = (_id) => {
   const jwtkey = process.env.JWT_SECRET_KEY;
@@ -73,6 +74,31 @@ const findUser = async (req, res) => {
   }
 };
 
+const update = async (req, res) => {
+  const { _id } = req.body;
+  try {
+    let user = await userModel.findById(_id);
+    if (!user) {
+      return res.status(404).json({ error: 'Professional user not found' });
+    }
+
+    // Update professionalUser object with truthy properties from req.body
+    Object.keys(req.body).forEach(key => {
+      if (req.body[key]) {
+        user[key] = req.body[key];
+      }
+    });
+
+    // Save the updated professionalUser object
+    user = await user.save();
+
+    res.status(200).json({ message: 'User updated successfully', data: user });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 const getUsers = async (req, res) => {
   try {
     const users = await userModel.find();
@@ -83,4 +109,4 @@ const getUsers = async (req, res) => {
   }
 };
 
-module.exports = { loginUser, findUser, getUsers,registerUser };
+module.exports = { loginUser, findUser, getUsers,registerUser,update };
