@@ -22,10 +22,9 @@ const professionalUserSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-
 class ProfessionalUserModel extends BaseUser {
     constructor(name, age, gender, email, profilePicture, password, expertise) {
-        super(name, age, gender, email, profilePicture, password, true); // Pass true for anonymous
+        super(name, age, gender, email, profilePicture, password, true);
         this.expertise = expertise;
     }
 }
