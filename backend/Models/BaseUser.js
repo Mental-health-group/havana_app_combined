@@ -17,6 +17,10 @@ class BaseUser {
     async comparePassword(candidatePassword) {
         return await bcrypt.compare(candidatePassword, this.password);
     }
+    generateAuthToken() {
+        const jwtkey = process.env.JWT_SECRET_KEY;
+        return jwt.sign({ _id: this._id }, jwtkey, { expiresIn: "3d" });
+    }
 }
 
 const BaseUserSchema = new mongoose.Schema(
